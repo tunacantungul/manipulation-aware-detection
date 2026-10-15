@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Manipulation-Aware Detection | CMPE 491 Group 13</title>
+  <meta name="description" content="Senior design project at TED University: attention-guided, manipulation-aware detection of AI-generated and edited images for improved cross-dataset generalization.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fbfaf8;
+      --surface: #ffffff;
+      --text: #1d1f23;
+      --muted: #5d636e;
+      --border: #e4e2dd;
+      --accent: #b3261e;
+      --accent-soft: #fbeceb;
+      --ok: #1f7a4d;
+      --ok-soft: #e6f4ec;
+      --wait: #6b6f78;
+      --wait-soft: #efeeeb;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #131416;
+        --surface: #1b1d20;
+        --text: #e9e8e5;
+        --muted: #a2a6ae;
+        --border: #2d3035;
+        --accent: #ef7b72;
+        --accent-soft: #3a1f1d;
+        --ok: #6fcf9b;
+        --ok-soft: #1c3127;
+        --wait: #a2a6ae;
+        --wait-soft: #26282c;
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg: #131416;
+      --surface: #1b1d20;
+      --text: #e9e8e5;
+      --muted: #a2a6ae;
+      --border: #2d3035;
+      --accent: #ef7b72;
+      --accent-soft: #3a1f1d;
+      --ok: #6fcf9b;
+      --ok-soft: #1c3127;
+      --wait: #a2a6ae;
+      --wait-soft: #26282c;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 16px/1.65 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--accent); }
+    .wrap { max-width: 880px; margin: 0 auto; padding: 0 16px; }
+
+    nav {
+      position: sticky; top: 0; z-index: 10;
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+    }
+    nav .wrap {
+      display: flex; gap: 20px; align-items: center;
+      height: 52px; overflow-x: auto; white-space: nowrap;
+    }
+    nav .brand { font-weight: 700; color: var(--text); text-decoration: none; margin-right: auto; }
+    nav a.link { color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 500; }
+    nav a.link:hover { color: var(--text); }
+
+    header { padding: 64px 0 40px; border-bottom: 1px solid var(--border); }
+    .eyebrow {
+      display: inline-block; font-size: 13px; font-weight: 600; letter-spacing: .04em;
+      text-transform: uppercase; color: var(--accent); background: var(--accent-soft);
+      padding: 4px 10px; border-radius: 999px;
+    }
+    h1 {
+      font-family: "Source Serif 4", Georgia, serif; font-weight: 600;
+      font-size: clamp(28px, 5vw, 42px); line-height: 1.18; letter-spacing: -.01em;
+      margin: 18px 0 14px;
+    }
+    .sub { color: var(--muted); margin: 0; font-size: 15px; }
+
+    section { padding: 48px 0; border-bottom: 1px solid var(--border); scroll-margin-top: 52px; }
+    section:last-of-type { border-bottom: 0; }
+    h2 { font-size: 22px; margin: 0 0 20px; letter-spacing: -.01em; }
+    p { margin: 0 0 14px; }
+
+    .rq {
+      border-left: 3px solid var(--accent); background: var(--surface);
+      padding: 14px 18px; margin: 20px 0 0; border-radius: 0 8px 8px 0;
+      font-style: italic;
+    }
+    .rq b { font-style: normal; display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+
+    .people { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 14px 16px;
+    }
+    .card .name { font-weight: 600; }
+    .card .role { color: var(--muted); font-size: 14px; }
+    h3 { font-size: 15px; color: var(--muted); font-weight: 600; margin: 28px 0 12px; }
+    h3:first-of-type { margin-top: 0; }
+
+    .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+    table { width: 100%; border-collapse: collapse; font-size: 15px; }
+    th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:last-child td { border-bottom: 0; }
+    th { font-size: 13px; color: var(--muted); font-weight: 600; }
+    td.id { font-weight: 600; white-space: nowrap; }
+    td.date { white-space: nowrap; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .badge {
+      display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap;
+    }
+    .badge.wait { color: var(--wait); background: var(--wait-soft); }
+    .badge.ok { color: var(--ok); background: var(--ok-soft); }
+
+    @media (max-width: 520px) {
+      table { font-size: 14px; }
+      th, td { padding: 10px 8px; }
+      td.date { white-space: normal; }
+    }
+
+    footer { padding: 32px 0 48px; color: var(--muted); font-size: 14px; }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="wrap">
+      <a class="brand" href="#top">Group 13</a>
+      <a class="link" href="#about">About</a>
+      <a class="link" href="#team">Team</a>
+      <a class="link" href="#deliverables">Deliverables</a>
+    </div>
+  </nav>
+
+  <main class="wrap" id="top">
+    <header>
+      <span class="eyebrow">CMPE 491 / 492 · Senior Design Project</span>
+      <h1>Attention-Guided Manipulation-Aware Detection of AI-Generated and Edited Images for Improved Cross-Dataset Generalization</h1>
+      <p class="sub">Department of Computer Engineering, TED University · 2026–2027</p>
+    </header>
+
+    <section id="about">
+      <h2>About the project</h2>
+      <p>Detectors of AI-generated and AI-edited photographs often report near-perfect accuracy on the dataset they were trained on, yet degrade sharply on images from unseen generators, unseen editing tools, unseen datasets, or after real-world post-processing such as compression and resizing. A likely reason is that detectors learn shortcuts: cues that are correlated with the label in the training data but are not the manipulation itself.</p>
+      <p>This project investigates whether guiding a detector's attention toward the manipulated regions of an image improves its cross-dataset generalization. We add an attention module to an existing detector and supervise it with manipulation masks, which are available by construction for locally edited (inpainted) photographs. We evaluate the detector under cross-generator, cross-dataset and post-processing shifts, and measure whether its attention stays on the manipulated region when the data distribution changes.</p>
+      <div class="rq">
+        <b>Guiding question</b>
+        Do detectors of AI-generated and edited photographs maintain their in-dataset performance on unseen generators, unseen editing operations, unseen datasets and real-world post-processing, and can attention guidance close the gap?
+      </div>
+    </section>
+
+    <section id="team">
+      <h2>Team</h2>
+      <h3>Students</h3>
+      <div class="people">
+        <div class="card"><div class="name">Ali Efe Altun</div><div class="role">Computer Engineering</div></div>
+        <div class="card"><div class="name">Nilsu Dila Cabbar</div><div class="role">Computer Engineering</div></div>
+        <div class="card"><div class="name">Tuna Can Tungul</div><div class="role">Computer Engineering</div></div>
+      </div>
+      <h3>Supervisor and jury</h3>
+      <div class="people">
+        <div class="card"><div class="name">Eren Ulu</div><div class="role">Supervisor</div></div>
+        <div class="card"><div class="name">Ayşe Yasemin Seydim</div><div class="role">Jury member</div></div>
+        <div class="card"><div class="name">Ayşenur Birtürk</div><div class="role">Jury member</div></div>
+      </div>
+    </section>
+
+    <section id="deliverables">
+      <h2>Deliverables</h2>
+      <p class="sub" style="margin-bottom:18px">Reports are added here as PDFs on their due dates.</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>No</th><th>Deliverable</th><th>Due</th><th>Document</th></tr>
+          </thead>
+          <tbody>
+            <!-- When a report is ready: put the PDF in reports/ and replace the badge with
+                 <a href="reports/D1-Project-Proposal.pdf">PDF</a> -->
+            <tr><td class="id">D1</td><td>Project Proposal / Initial Literature Review</td><td class="date">16.10.2026</td><td><span class="badge wait">Upcoming</span></td></tr>
+            <tr><td class="id">D2</td><td>Project Specifications / Literature Review</td><td class="date">23.10.2026</td><td><span class="badge wait">Upcoming</span></td></tr>
+            <tr><td class="id">D3</td><td>TODO / Backlog Document v1</td><td class="date">23.10.2026</td><td><span class="badge wait">Upcoming</span></td></tr>
+            <tr><td class="id">D4</td><td>Project Analysis Report</td><td class="date">20.11.2026</td><td><span class="badge wait">Upcoming</span></td></tr>
+            <tr><td class="id">D5</td><td>TODO / Backlog Document v2</td><td class="date">20.11.2026</td><td><span class="badge wait">Upcoming</span></td></tr>
+            <tr><td class="id">D6</td><td>High-Level Design Report</td><td class="date">31.12.2026</td><td><span class="badge wait">Upcoming</span></td></tr>
+            <tr><td class="id">D7</td><td>TODO / Backlog Document v3</td><td class="date">31.12.2026</td><td><span class="badge wait">Upcoming</span></td></tr>
+            <tr><td class="id">D8</td><td>Oral and Poster Presentations, Demonstration</td><td class="date">January 2027</td><td><span class="badge wait">Upcoming</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">CMPE 491 Senior Design Project I · TED University · Group 13</div>
+  </footer>
+</body>
+</html>
