@@ -15,14 +15,26 @@
   // Versions the course expects. A version becomes selectable once its file is loaded.
   const EXPECTED_VERSIONS = [
     { key: 'current', short: 'Current', sub: 'Living backlog' },
-    { key: 'v1', short: 'v1', deliverable: 'D3', due: '2026-10-23' },
-    { key: 'v2', short: 'v2', deliverable: 'D5', due: '2026-11-20' },
-    { key: 'v3', short: 'v3', deliverable: 'D7', due: '2026-12-31' },
+    { key: 'v1', short: 'Backlog v1', due: '2026-10-23' },
+    { key: 'v2', short: 'Backlog v2', due: '2026-11-20' },
+    { key: 'v3', short: 'Backlog v3', due: '2026-12-31' },
   ];
-  const STATUSES = ['Not Started', 'In Progress', 'Complete', 'Blocked'];
-  const STATUS_CLASS = { 'Not Started': 'wait', 'In Progress': 'prog', 'Complete': 'ok', 'Blocked': 'block' };
+  // Deliverable ids in the data are shown by name, as in the Deliverables table.
+  const DELIVERABLE_NAMES = {
+    D1: 'Project Proposal',
+    D2: 'Project Specifications',
+    D3: 'Backlog v1',
+    D4: 'Analysis Report',
+    D5: 'Backlog v2',
+    D6: 'High-Level Design Report',
+    D7: 'Backlog v3',
+    D8: 'Presentation, Poster & Demo',
+  };
+  const STATUSES = ['Not Started', 'In Progress', 'Complete'];
+  const STATUS_CLASS = { 'Not Started': 'wait', 'In Progress': 'prog', 'Complete': 'ok' };
   const PRIORITIES = ['High', 'Medium', 'Low'];
   const PRIORITY_CLASS = { High: 'high', Medium: 'med', Low: 'low' };
+  const VIEWS = ['list', 'board', 'table'];
   const POINTS = [1, 2, 3, 5, 8, 13];
   const NONE = '__none__';
   const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -54,6 +66,22 @@
     const h = String(href ?? '').trim();
     if (!h) return '';
     return /^[a-z][a-z0-9+.-]*:/i.test(h) && !/^(https?|mailto):/i.test(h) ? '' : h;
+  };
+
+  const refName = (ref) => DELIVERABLE_NAMES[ref] || ref;
+  const refsText = (refs) => refs.map(refName).join(', ');
+  // "Nilsu Dila Cabbar" -> "NC", as on Jira avatars.
+  const initials = (name) => {
+    const parts = name.trim().split(/\s+/);
+    return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+  };
+
+  const ICONS = {
+    story: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2h8a1 1 0 0 1 1 1v11l-5-3-5 3V3a1 1 0 0 1 1-1z" fill="currentColor"/></svg>',
+    task: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="2" fill="currentColor"/><path d="M5 8.2l2 2 4-4.2" fill="none" stroke="var(--surface)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    High: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 10l5-5 5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    Medium: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6h10M3 10h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+    Low: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   };
 
   const statusBadge = (s) => `<span class="badge ${STATUS_CLASS[s] || 'wait'}">${esc(s)}</span>`;
@@ -223,7 +251,7 @@
     versionKey: 'current',
     data: null,
     notice: '',
-    view: prefs.view === 'board' ? 'board' : 'table',
+    view: VIEWS.includes(prefs.view) ? prefs.view : 'list',
     collapsed: prefs.collapsed && typeof prefs.collapsed === 'object' ? prefs.collapsed : {},
     filters: emptyFilters(),
     sort: { key: null, dir: 1 },
@@ -294,7 +322,6 @@
     if (!tasks.length) return 'Not Started';
     if (tasks.every((t) => t.status === 'Complete')) return 'Complete';
     if (tasks.some((t) => t.status === 'In Progress' || t.status === 'Complete')) return 'In Progress';
-    if (tasks.some((t) => t.status === 'Blocked')) return 'Blocked';
     return 'Not Started';
   }
 
@@ -309,11 +336,12 @@
       .map((k) => ({ key: k, short: k }));
     $('bl-versions').innerHTML = EXPECTED_VERSIONS.concat(extra).map((v) => {
       const loaded = isLoaded(v.key);
-      const sub = v.sub || [v.deliverable, fmtDate(v.due)].filter(Boolean).join(' · ');
+      let sub = v.sub || '';
+      if (!sub && v.due) sub = loaded ? `Submitted ${fmtDate(v.due)}` : `Upcoming · ${fmtDate(v.due)}`;
       return `<button type="button" class="bl-chip bl-version" data-version="${esc(v.key)}"
         aria-pressed="${v.key === state.versionKey}"${loaded ? '' : ' disabled'}>
         <span class="bl-version-name">${esc(v.short)}</span>
-        <span class="bl-version-sub">${esc(sub)}${loaded ? '' : ' · upcoming'}</span></button>`;
+        <span class="bl-version-sub">${esc(sub)}</span></button>`;
     }).join('');
   }
 
@@ -327,12 +355,12 @@
     const m = d.meta;
     const parts = [state.versionKey === 'current'
       ? 'Viewing the current backlog'
-      : `Viewing ${m.label}${m.deliverable ? `, submitted as ${m.deliverable}` : ''}`];
+      : `Viewing ${m.label}, a frozen snapshot`];
     if (m.frozenOn) parts.push(`frozen on ${fmtDate(m.frozenOn)}`);
     if (m.lastUpdated) parts.push(`Last updated: ${fmtDate(m.lastUpdated)}`);
     $('bl-meta').textContent = parts.join(' · ');
     $('bl-print-meta').textContent = [
-      `${m.label}${m.deliverable ? ` (${m.deliverable})` : ''}`,
+      m.label,
       m.lastUpdated ? `Last updated ${fmtDate(m.lastUpdated)}` : '',
       `Printed ${fmtDate(today())}`,
     ].filter(Boolean).join(' · ');
@@ -377,44 +405,27 @@
 
   function renderSummary(filtered) {
     const all = state.data ? state.data.tasks : [];
-    const stat = (num, label) => `<div class="card bl-stat"><div class="bl-stat-num">${num}</div><div class="bl-stat-label">${label}</div></div>`;
     const total = sumPoints(filtered);
     const done = donePoints(filtered);
-    const label = `${done} / ${total} story points complete`;
-    $('bl-stats').innerHTML = stat(filtered.length, filtersActive() ? `Tasks shown (of ${all.length})` : 'Tasks')
-      + ['Complete', 'In Progress', 'Not Started', 'Blocked']
-        .map((s) => stat(filtered.filter((t) => t.status === s).length, statusBadge(s))).join('')
-      + `<div class="card bl-stat bl-stat-progress">
-          <div class="bl-stat-row"><span class="bl-stat-num">${percent(done, total)}%</span><span class="bl-stat-label">${esc(label)}</span></div>
-          ${progressBar(done, total, label)}
-        </div>`;
+    const label = `${done} of ${total} story points complete`;
+    const counts = STATUSES.slice().reverse()
+      .map((s) => `<span class="bl-summary-count"><b>${filtered.filter((t) => t.status === s).length}</b>${statusBadge(s)}</span>`)
+      .join('');
+    $('bl-stats').innerHTML = `<div class="card bl-summary">
+        <div class="bl-summary-head">
+          <span class="bl-summary-pct">${percent(done, total)}%</span>
+          <span class="bl-summary-label">${esc(label)}${filtersActive() ? ' (filtered)' : ''}</span>
+          <span class="bl-summary-counts"><span class="bl-summary-count"><b>${filtered.length}</b>task${filtered.length === 1 ? '' : 's'}</span>${counts}</span>
+        </div>
+        ${progressBar(done, total, label)}
+      </div>`;
     $('bl-count').textContent = `${filtered.length} of ${all.length} task${all.length === 1 ? '' : 's'}`;
   }
 
-  function renderSprints(filtered) {
-    if (!state.data || (!state.data.sprints.length && !filtered.length)) {
-      $('bl-sprints').innerHTML = '<p class="sub">No sprints defined yet.</p>';
-      return;
-    }
-    const groups = groupTasks(filtered);
-    if (!groups.length) {
-      $('bl-sprints').innerHTML = '<p class="sub">No sprints match the current filters.</p>';
-      return;
-    }
-    $('bl-sprints').innerHTML = groups.map((g) => {
-      const total = sumPoints(g.tasks);
-      const done = donePoints(g.tasks);
-      const info = [sprintDates(g.sprint), g.sprint && g.sprint.deliverables.length ? `Deliverables: ${g.sprint.deliverables.join(', ')}` : '']
-        .filter(Boolean).join(' · ');
-      return `<div class="card bl-sprint">
-        <div class="bl-sprint-head"><span class="bl-sprint-name">${esc(g.name)}</span>${statusBadge(groupStatus(g.tasks))}</div>
-        ${info ? `<div class="bl-sprint-info">${esc(info)}</div>` : ''}
-        ${g.sprint && g.sprint.goal ? `<p class="bl-sprint-goal">${esc(g.sprint.goal)}</p>` : ''}
-        ${progressBar(done, total, `${g.name}: ${done} of ${total} story points complete`)}
-        <div class="bl-sprint-info">${done} / ${total} story points complete · ${g.tasks.length} task${g.tasks.length === 1 ? '' : 's'}</div>
-      </div>`;
-    }).join('');
-  }
+  const sprintInfo = (g) => [
+    sprintDates(g.sprint),
+    `${g.tasks.length} task${g.tasks.length === 1 ? '' : 's'}`,
+  ].filter(Boolean).join(' · ');
 
   function detailHTML(t) {
     const d = state.data;
@@ -435,13 +446,23 @@
       ${row('Acceptance criteria', esc(t.acceptance), true)}
       ${row('Sprint', sprint ? esc(`${sprint.name}${sprintDates(sprint) ? ` (${sprintDates(sprint)})` : ''}`) : 'Unscheduled')}
       ${row('Epic', epic ? esc(`${epic.id} · ${epic.name}`) : esc(t.epic))}
-      ${row('Started', fmtDate(t.startedOn) || 'Not yet')}
+      ${row('Started', fmtDate(t.startedOn) || (t.status === 'Not Started' ? 'Not yet' : 'Not recorded'))}
       ${row('Completed', fmtDate(t.completedOn) || 'Not yet')}
       ${row('Owner(s)', esc(t.owners.join(', ')) || 'Unassigned')}
-      ${row('Related', esc(t.related.join(', ')))}
+      ${row('Story / task', t.story ? 'User story' : 'Technical task')}
+      ${row('Sprint ready', yesNo(t.sprintReady))}
+      ${row('Related', esc(refsText(t.related)))}
       ${row('Links', links.join(' · '), true)}
       ${row('Notes', esc(t.notes), true)}
     </dl>`;
+  }
+
+  // Keeps the table (and its printout) compact: a task owned by everyone reads "Whole team".
+  function ownersCell(owners) {
+    const team = state.data.team;
+    if (!owners.length) return '<span class="bl-none">Unassigned</span>';
+    if (team.length > 1 && team.every((m) => owners.includes(m))) return 'Whole team';
+    return owners.map(esc).join('<br>');
   }
 
   function tableHTML(groups) {
@@ -468,8 +489,8 @@
           <td>${priorityBadge(t.priority)}</td>
           <td>${statusBadge(t.status)}</td>
           <td class="bl-num">${t.points}</td>
-          <td class="bl-small">${t.owners.length ? t.owners.map(esc).join('<br>') : '<span class="bl-none">Unassigned</span>'}</td>
-          <td class="bl-small">${esc(t.related.join(', '))}</td>
+          <td class="bl-small">${ownersCell(t.owners)}</td>
+          <td class="bl-small">${esc(refsText(t.related))}</td>
         </tr>
         <tr class="bl-detail" id="${t.uid}-d"${open ? '' : ' hidden'}><td colspan="${COLUMNS.length}">${detailHTML(t)}</td></tr>`;
       }).join('') || `<tr><td colspan="${COLUMNS.length}" class="bl-empty">No tasks in this sprint yet.</td></tr>`;
@@ -478,7 +499,7 @@
         <tr class="bl-group"><th scope="rowgroup" colspan="${COLUMNS.length}"><div class="bl-group-head">
           <button type="button" class="bl-group-toggle" data-group="${esc(g.id)}" aria-expanded="${!collapsed}" aria-controls="${bodyId}"><span class="bl-caret" aria-hidden="true"></span>${esc(g.name)}</button>
           <span class="bl-group-meta">${esc(sprintDates(g.sprint))}</span>
-          <span class="bl-group-pts">${total} pts</span>
+          <span class="bl-group-pts">${donePoints(g.tasks)} / ${total} pts done</span>
           ${statusBadge(groupStatus(g.tasks))}
         </div></th></tr>
         ${rows}
@@ -492,16 +513,72 @@
       <thead><tr>${head}</tr></thead>${bodies}${empty}</table></div>`;
   }
 
+  function avatarsHTML(owners) {
+    if (!owners.length) {
+      return '<span class="bl-avatars"><span class="bl-avatar is-empty" title="Unassigned" aria-label="Unassigned"></span></span>';
+    }
+    const team = state.data.team;
+    return `<span class="bl-avatars">${owners.map((o) => {
+      const slot = team.indexOf(o);
+      return `<span class="bl-avatar${slot >= 0 ? ` is-${slot % 3}` : ''}" title="${esc(o)}" aria-label="${esc(o)}">${esc(initials(o))}</span>`;
+    }).join('')}</span>`;
+  }
+
+  // Jira-like backlog: one box per sprint, one compact row per task.
+  function listHTML(groups) {
+    if (!groups.length) return '<p class="card bl-empty">No tasks match the current filters.</p>';
+    const epicName = (id) => (state.data.epics.find((e) => e.id === id) || { name: id }).name;
+    return groups.map((g, gi) => {
+      const collapsed = Boolean(state.collapsed[collapseKey(g.id)]);
+      const listId = `bl-gl${gi}`;
+      const total = sumPoints(g.tasks);
+      const done = donePoints(g.tasks);
+      const deliverables = g.sprint && g.sprint.deliverables.length ? g.sprint.deliverables.map(refName).join(', ') : '';
+      const rows = g.tasks.map((t) => {
+        const open = state.open.has(t.uid);
+        const type = t.story ? 'story' : 'task';
+        return `<li class="bl-item${open ? ' is-open' : ''}" data-uid="${t.uid}">
+          <button type="button" class="bl-row bl-task-toggle" data-uid="${t.uid}" aria-expanded="${open}" aria-controls="${t.uid}-d">
+            <span class="bl-row-main">
+              <span class="bl-type is-${type}" title="${t.story ? 'User story' : 'Technical task'}">${ICONS[type]}<span class="bl-visually-hidden">${t.story ? 'User story' : 'Technical task'}</span></span>
+              <span class="bl-key">${esc(t.id)}</span>
+              <span class="bl-summary-text">${esc(t.title || '(untitled)')}</span>
+              ${t.sprintReady ? '' : '<span class="bl-tag">Not ready</span>'}
+            </span>
+            <span class="bl-row-meta">
+              <span class="bl-epic-cell">${t.epic ? `<span class="bl-epic" title="${esc(epicName(t.epic))}">${esc(epicName(t.epic))}</span>` : ''}</span>
+              <span class="bl-prio is-${PRIORITY_CLASS[t.priority]}" title="${esc(t.priority)} priority">${ICONS[t.priority]}<span class="bl-visually-hidden">${esc(t.priority)} priority</span></span>
+              <span class="bl-status-cell">${statusBadge(t.status)}</span>
+              ${avatarsHTML(t.owners)}
+              <span class="bl-points" title="${t.points} story points">${t.points}</span>
+            </span>
+          </button>
+          <div class="bl-row-detail" id="${t.uid}-d"${open ? '' : ' hidden'}>${detailHTML(t)}</div>
+        </li>`;
+      }).join('') || '<li class="bl-empty">No tasks in this sprint yet.</li>';
+      return `<div class="bl-sprintbox">
+        <div class="bl-sprintbox-head">
+          <button type="button" class="bl-group-toggle" data-group="${esc(g.id)}" aria-expanded="${!collapsed}" aria-controls="${listId}"><span class="bl-caret" aria-hidden="true"></span>${esc(g.name)}</button>
+          <span class="bl-group-meta">${esc(sprintInfo(g))}</span>
+          <span class="bl-group-pts">${done} / ${total} pts done</span>
+          ${statusBadge(groupStatus(g.tasks))}
+        </div>
+        ${g.sprint && (g.sprint.goal || deliverables) ? `<div class="bl-sprintbox-goal">${esc(g.sprint.goal)}${deliverables ? `<span class="bl-sprintbox-dl">Deliverables: ${esc(deliverables)}</span>` : ''}</div>` : ''}
+        ${progressBar(done, total, `${g.name}: ${done} of ${total} story points complete`)}
+        <ul class="bl-list${collapsed ? ' is-collapsed' : ''}" id="${listId}">${rows}</ul>
+      </div>`;
+    }).join('');
+  }
+
   function boardHTML(tasks) {
     const sprintName = (id) => (state.data.sprints.find((s) => s.id === id) || { name: 'Unscheduled' }).name;
     return `<div class="bl-board">${STATUSES.map((status) => {
       const cards = sortTasks(tasks.filter((t) => t.status === status)).map((t) => {
         const open = state.open.has(t.uid);
-        const meta = [`${t.points} pts`, sprintName(t.sprint), t.owners.join(', ') || 'Unassigned'];
         return `<li class="card bl-kcard${open ? ' is-open' : ''}" data-uid="${t.uid}">
           <div class="bl-kcard-top"><span>${esc(t.id)}</span>${priorityBadge(t.priority)}</div>
           <button type="button" class="bl-task-toggle bl-kcard-title" data-uid="${t.uid}" aria-expanded="${open}" aria-controls="${t.uid}-d">${esc(t.title || '(untitled)')}</button>
-          <div class="bl-kcard-meta">${meta.map(esc).join(' · ')}</div>
+          <div class="bl-kcard-meta"><span>${esc(sprintName(t.sprint))}</span>${avatarsHTML(t.owners)}<span class="bl-points" title="${t.points} story points">${t.points}</span></div>
           <div class="bl-kcard-detail" id="${t.uid}-d"${open ? '' : ' hidden'}>${detailHTML(t)}</div>
         </li>`;
       }).join('');
@@ -526,13 +603,14 @@
       return;
     }
     const view = state.printing ? 'table' : state.view;
-    host.innerHTML = view === 'board' ? boardHTML(filtered) : tableHTML(groupTasks(filtered));
+    if (view === 'board') host.innerHTML = boardHTML(filtered);
+    else if (view === 'table') host.innerHTML = tableHTML(groupTasks(filtered));
+    else host.innerHTML = listHTML(groupTasks(filtered));
   }
 
   function renderResults() {
     const filtered = filteredTasks();
     renderSummary(filtered);
-    renderSprints(filtered);
     renderView(filtered);
   }
 
@@ -551,7 +629,7 @@
     if (!isLoaded(key) && key !== 'current') {
       const expected = EXPECTED_VERSIONS.find((v) => v.key === key);
       state.notice = expected
-        ? `Backlog ${key} (${expected.deliverable}) is not published yet. Showing the current backlog.`
+        ? `${expected.short} is not published yet. Showing the current backlog.`
         : `There is no backlog version "${key}". Showing the current backlog.`;
       key = 'current';
     }
@@ -585,7 +663,7 @@
     const panel = $(`${uid}-d`);
     if (panel) panel.hidden = !open;
     section.querySelectorAll(`[aria-controls="${uid}-d"]`).forEach((b) => b.setAttribute('aria-expanded', String(open)));
-    section.querySelectorAll(`[data-uid="${uid}"].bl-task, [data-uid="${uid}"].bl-kcard`)
+    section.querySelectorAll(`[data-uid="${uid}"].bl-task, [data-uid="${uid}"].bl-kcard, [data-uid="${uid}"].bl-item`)
       .forEach((el) => el.classList.toggle('is-open', open));
   }
 

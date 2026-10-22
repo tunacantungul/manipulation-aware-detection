@@ -23,8 +23,6 @@
       --wait-soft: #efeeeb;
       --prog: #1f5fa8;
       --prog-soft: #e7eff9;
-      --block: #93540a;
-      --block-soft: #fbf0dc;
     }
     @media (prefers-color-scheme: dark) {
       :root:not([data-theme="light"]) {
@@ -41,8 +39,6 @@
         --wait-soft: #26282c;
         --prog: #8db8f2;
         --prog-soft: #1c2a3d;
-        --block: #f0b765;
-        --block-soft: #362a17;
       }
     }
     :root[data-theme="dark"] {
@@ -59,8 +55,6 @@
       --wait-soft: #26282c;
       --prog: #8db8f2;
       --prog-soft: #1c2a3d;
-      --block: #f0b765;
-      --block-soft: #362a17;
     }
 
     * { box-sizing: border-box; }
@@ -172,29 +166,87 @@
     .bl-version-name { font-weight: 600; }
     .bl-version-sub { font-size: 12px; opacity: .8; }
     .bl-notice, .bl-warn { font-size: 13px; color: var(--muted); margin: 0 0 16px; }
-    .bl-warn summary { cursor: pointer; color: var(--block); font-weight: 500; }
+    .bl-warn summary { cursor: pointer; color: var(--accent); font-weight: 500; }
     .bl-warn ul { margin: 6px 0 0; padding-left: 20px; }
 
     .badge.prog { color: var(--prog); background: var(--prog-soft); }
-    .badge.block { color: var(--block); background: var(--block-soft); }
     .badge.high { color: var(--accent); background: var(--accent-soft); }
     .badge.med { color: var(--text); box-shadow: inset 0 0 0 1px var(--border); }
     .badge.low { color: var(--muted); box-shadow: inset 0 0 0 1px var(--border); }
 
-    .bl-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 10px; }
-    .bl-stat-num { font-size: 26px; font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
-    .bl-stat-label { font-size: 13px; color: var(--muted); }
-    .bl-stat-progress { grid-column: 1 / -1; }
-    .bl-stat-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-bottom: 8px; }
-    .bl-bar { height: 8px; border-radius: 999px; background: var(--wait-soft); overflow: hidden; }
+    .bl-bar { height: 6px; border-radius: 999px; background: var(--wait-soft); overflow: hidden; }
     .bl-bar > span { display: block; height: 100%; border-radius: inherit; background: var(--ok); }
 
-    .bl-sprints { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
-    .bl-sprint-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-    .bl-sprint-name { font-weight: 600; }
-    .bl-sprint-info { font-size: 13px; color: var(--muted); }
-    .bl-sprint-goal { font-size: 14px; margin: 6px 0 0; }
-    .bl-sprint .bl-bar { margin: 10px 0 6px; }
+    .bl-summary { margin-bottom: 22px; }
+    .bl-summary-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-bottom: 10px; }
+    .bl-summary-pct { font-size: 24px; font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
+    .bl-summary-label { font-size: 14px; color: var(--muted); }
+    .bl-summary-counts { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin-left: auto; font-size: 13px; color: var(--muted); }
+    .bl-summary-count { display: inline-flex; align-items: center; gap: 6px; }
+    .bl-summary-count b { color: var(--text); font-variant-numeric: tabular-nums; }
+
+    /* List view: Jira-like sprint boxes with one compact row per task. */
+    .bl-sprintbox { border: 1px solid var(--border); border-radius: 10px; background: var(--surface); padding: 12px 14px 6px; }
+    .bl-sprintbox + .bl-sprintbox { margin-top: 12px; }
+    .bl-sprintbox-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+    .bl-sprintbox-goal { font-size: 13px; color: var(--muted); margin: 4px 0 0 20px; }
+    .bl-sprintbox-dl { display: block; }
+    .bl-sprintbox > .bl-bar { margin: 10px 0 6px 20px; }
+    .bl-list { list-style: none; margin: 0 -14px; padding: 0; border-top: 1px solid var(--border); }
+    .bl-list.is-collapsed { display: none; }
+    .bl-item + .bl-item { border-top: 1px solid var(--border); }
+    button.bl-row {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; width: 100%;
+      padding: 8px 14px; font-size: 14px; font-weight: 400;
+    }
+    .bl-row:hover, .bl-item.is-open > .bl-row { background: color-mix(in srgb, var(--wait-soft) 55%, transparent); }
+    .bl-task-toggle.bl-row:hover { color: inherit; }
+    .bl-row:hover .bl-summary-text { color: var(--accent); }
+    .bl-row-main { display: flex; align-items: center; gap: 10px; flex: 1 1 260px; min-width: 0; }
+    .bl-row-meta { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+    .bl-type { display: inline-flex; flex: none; width: 16px; height: 16px; }
+    .bl-type svg, .bl-prio svg { width: 100%; height: 100%; }
+    .bl-type.is-story { color: var(--ok); }
+    .bl-type.is-task { color: var(--prog); }
+    .bl-key { flex: none; font-size: 13px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .bl-summary-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    /* Fixed widths keep the right-hand fields aligned from row to row. */
+    .bl-epic-cell { flex: none; width: 168px; display: flex; justify-content: flex-end; }
+    .bl-epic {
+      max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      font-size: 12px; font-weight: 600; color: var(--accent); background: var(--accent-soft);
+      padding: 1px 7px; border-radius: 4px;
+    }
+    .bl-status-cell { flex: none; width: 84px; }
+    .bl-tag { flex: none; font-size: 11px; font-weight: 600; color: var(--muted); border: 1px dashed var(--border); padding: 0 6px; border-radius: 4px; white-space: nowrap; }
+    .bl-prio { display: inline-flex; width: 16px; height: 16px; }
+    .bl-prio.is-high { color: var(--accent); }
+    .bl-prio.is-med { color: var(--prog); }
+    .bl-prio.is-low { color: var(--muted); }
+    .bl-avatars { display: inline-flex; gap: 2px; }
+    .bl-row-meta .bl-avatars { width: 70px; justify-content: flex-end; }
+    .bl-avatar {
+      display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
+      font-size: 9.5px; font-weight: 700; color: var(--text); background: var(--wait-soft);
+    }
+    .bl-avatar.is-0 { color: var(--accent); background: var(--accent-soft); }
+    .bl-avatar.is-1 { color: var(--prog); background: var(--prog-soft); }
+    .bl-avatar.is-2 { color: var(--ok); background: var(--ok-soft); }
+    .bl-avatar.is-empty { background: transparent; box-shadow: inset 0 0 0 1.5px var(--border); border: 0; }
+    .bl-points {
+      min-width: 24px; text-align: center; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums;
+      color: var(--text); background: var(--wait-soft); padding: 1px 7px; border-radius: 999px;
+    }
+    .bl-row-detail { padding: 6px 14px 14px 40px; background: color-mix(in srgb, var(--wait-soft) 55%, transparent); }
+    @media (max-width: 600px) {
+      .bl-row-main { flex-basis: 100%; }
+      .bl-row-meta { margin-left: 26px; flex-wrap: wrap; }
+      .bl-epic-cell { display: none; }
+      .bl-row-meta .bl-avatars { width: auto; }
+      .bl-row-detail { padding-left: 14px; }
+      .bl-sprintbox-goal, .bl-sprintbox > .bl-bar { margin-left: 0; }
+      .bl-summary-counts { margin-left: 0; }
+    }
 
     .bl-toolbar { display: grid; gap: 12px; margin-bottom: 14px; }
     .bl-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
@@ -262,7 +314,8 @@
     .bl-kcard:hover { border-color: var(--muted); }
     .bl-kcard-top { display: flex; justify-content: space-between; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--muted); }
     .bl-kcard-title { display: block; width: 100%; margin: 4px 0; font-weight: 600; line-height: 1.4; }
-    .bl-kcard-meta { font-size: 12px; color: var(--muted); }
+    .bl-kcard-meta { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+    .bl-kcard-meta > span:first-child { margin-right: auto; }
     .bl-kcard-detail { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 14px; }
     .bl-kcard-detail .bl-dl { grid-template-columns: 1fr; }
 
@@ -281,8 +334,6 @@
         --wait-soft: #efeeeb;
         --prog: #1f5fa8;
         --prog-soft: #e7eff9;
-        --block: #93540a;
-        --block-soft: #fbf0dc;
       }
       @page { size: A4; margin: 14mm 12mm; }
       body { font-size: 10.5pt; line-height: 1.45; }
@@ -290,15 +341,13 @@
       * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       a { color: inherit; text-decoration: none; }
       section { padding: 24px 0; }
-      #backlog h3 { margin: 18px 0 8px; }
-      .bl-stats { grid-template-columns: repeat(5, 1fr); gap: 6px; }
+      .bl-summary { margin-bottom: 14px; }
+      .bl-summary-pct { font-size: 16pt; }
       .bl-sort { display: none; }
       .bl-print-label { display: inline; }
       .table-wrap { border: 0; border-radius: 0; }
       .bl-group-head { position: static; max-width: none; }
-      .bl-stat-num { font-size: 16pt; }
       .card { padding: 8px 10px; break-inside: avoid; }
-      .bl-sprints { grid-template-columns: repeat(2, 1fr); gap: 6px; }
       .table-wrap { overflow: visible; }
       .bl-table { font-size: 8.5pt; }
       .bl-table th, .bl-table td { padding: 4px 6px; }
@@ -402,25 +451,18 @@
         <div class="bl-print-meta" id="bl-print-meta"></div>
       </div>
       <h2>Backlog</h2>
-      <p class="sub">Our TODO / backlog, grouped into sprints. The current backlog is updated through the semester; v1, v2 and v3 are frozen snapshots submitted as D3, D5 and D7.</p>
+      <p class="sub">Our TODO / backlog, grouped into sprints. The current backlog is updated through the semester; Backlog v1, v2 and v3 are frozen snapshots submitted on 23.10.2026, 20.11.2026 and 31.12.2026.</p>
       <p class="sub bl-meta" id="bl-meta"></p>
       <div class="bl-versions" id="bl-versions" role="group" aria-label="Backlog version"></div>
       <div id="bl-notices"></div>
 
-      <h3>Summary</h3>
-      <div class="bl-stats" id="bl-stats"></div>
-
-      <h3>Sprints</h3>
-      <div class="bl-sprints" id="bl-sprints"></div>
-
-      <h3>Tasks</h3>
+      <div id="bl-stats"></div>
       <div class="bl-toolbar">
         <div class="bl-chips" role="group" aria-label="Filter by status">
           <span class="bl-label" aria-hidden="true">Status</span>
           <button type="button" class="bl-chip" data-status="Not Started" aria-pressed="false">Not Started</button>
           <button type="button" class="bl-chip" data-status="In Progress" aria-pressed="false">In Progress</button>
           <button type="button" class="bl-chip" data-status="Complete" aria-pressed="false">Complete</button>
-          <button type="button" class="bl-chip" data-status="Blocked" aria-pressed="false">Blocked</button>
         </div>
         <div class="bl-fields">
           <label class="bl-field">Priority<select id="bl-f-priority"></select></label>
@@ -433,8 +475,9 @@
           <span class="bl-count" id="bl-count" aria-live="polite"></span>
           <button type="button" class="bl-btn" id="bl-clear">Clear filters</button>
           <div class="bl-seg" role="group" aria-label="View">
-            <button type="button" class="bl-btn" data-view="table" aria-pressed="true">Table</button>
+            <button type="button" class="bl-btn" data-view="list" aria-pressed="true">Backlog</button>
             <button type="button" class="bl-btn" data-view="board" aria-pressed="false">Board</button>
+            <button type="button" class="bl-btn" data-view="table" aria-pressed="false">Table</button>
           </div>
           <button type="button" class="bl-btn" id="bl-print">Print / Save as PDF</button>
           <button type="button" class="bl-btn" id="bl-csv">Export CSV</button>
