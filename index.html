@@ -21,6 +21,10 @@
       --ok-soft: #e6f4ec;
       --wait: #6b6f78;
       --wait-soft: #efeeeb;
+      --prog: #1f5fa8;
+      --prog-soft: #e7eff9;
+      --block: #93540a;
+      --block-soft: #fbf0dc;
     }
     @media (prefers-color-scheme: dark) {
       :root:not([data-theme="light"]) {
@@ -35,6 +39,10 @@
         --ok-soft: #1c3127;
         --wait: #a2a6ae;
         --wait-soft: #26282c;
+        --prog: #8db8f2;
+        --prog-soft: #1c2a3d;
+        --block: #f0b765;
+        --block-soft: #362a17;
       }
     }
     :root[data-theme="dark"] {
@@ -49,6 +57,10 @@
       --ok-soft: #1c3127;
       --wait: #a2a6ae;
       --wait-soft: #26282c;
+      --prog: #8db8f2;
+      --prog-soft: #1c2a3d;
+      --block: #f0b765;
+      --block-soft: #362a17;
     }
 
     * { box-sizing: border-box; }
@@ -134,6 +146,180 @@
     }
 
     footer { padding: 32px 0 48px; color: var(--muted); font-size: 14px; }
+
+    /* Backlog */
+    @media (max-width: 420px) {
+      nav .wrap { gap: 12px; }
+      nav a.link { font-size: 13px; }
+    }
+    #backlog :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+    .bl-visually-hidden {
+      position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+    }
+    .bl-print-head { display: none; }
+    .bl-meta { margin: 6px 0 16px; }
+    .bl-chip, .bl-btn {
+      font: inherit; font-size: 14px; font-weight: 500; color: var(--text); cursor: pointer;
+      background: var(--surface); border: 1px solid var(--border);
+    }
+    .bl-chip { border-radius: 999px; padding: 5px 13px; }
+    .bl-btn { border-radius: 8px; padding: 6px 12px; }
+    .bl-chip:hover:not(:disabled), .bl-btn:hover { border-color: var(--muted); }
+    .bl-chip[aria-pressed="true"] { background: var(--text); border-color: var(--text); color: var(--bg); }
+    .bl-chip:disabled { color: var(--muted); background: transparent; border-style: dashed; cursor: not-allowed; }
+    .bl-versions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+    .bl-version { display: inline-flex; flex-direction: column; align-items: flex-start; line-height: 1.3; border-radius: 10px; padding: 6px 14px; }
+    .bl-version-name { font-weight: 600; }
+    .bl-version-sub { font-size: 12px; opacity: .8; }
+    .bl-notice, .bl-warn { font-size: 13px; color: var(--muted); margin: 0 0 16px; }
+    .bl-warn summary { cursor: pointer; color: var(--block); font-weight: 500; }
+    .bl-warn ul { margin: 6px 0 0; padding-left: 20px; }
+
+    .badge.prog { color: var(--prog); background: var(--prog-soft); }
+    .badge.block { color: var(--block); background: var(--block-soft); }
+    .badge.high { color: var(--accent); background: var(--accent-soft); }
+    .badge.med { color: var(--text); box-shadow: inset 0 0 0 1px var(--border); }
+    .badge.low { color: var(--muted); box-shadow: inset 0 0 0 1px var(--border); }
+
+    .bl-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 10px; }
+    .bl-stat-num { font-size: 26px; font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
+    .bl-stat-label { font-size: 13px; color: var(--muted); }
+    .bl-stat-progress { grid-column: 1 / -1; }
+    .bl-stat-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-bottom: 8px; }
+    .bl-bar { height: 8px; border-radius: 999px; background: var(--wait-soft); overflow: hidden; }
+    .bl-bar > span { display: block; height: 100%; border-radius: inherit; background: var(--ok); }
+
+    .bl-sprints { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
+    .bl-sprint-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+    .bl-sprint-name { font-weight: 600; }
+    .bl-sprint-info { font-size: 13px; color: var(--muted); }
+    .bl-sprint-goal { font-size: 14px; margin: 6px 0 0; }
+    .bl-sprint .bl-bar { margin: 10px 0 6px; }
+
+    .bl-toolbar { display: grid; gap: 12px; margin-bottom: 14px; }
+    .bl-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+    .bl-label { font-size: 13px; font-weight: 600; color: var(--muted); margin-right: 4px; }
+    .bl-fields { display: flex; flex-wrap: wrap; gap: 10px; }
+    .bl-field {
+      display: flex; flex-direction: column; gap: 3px; flex: 1 1 140px; min-width: 0;
+      font-size: 13px; font-weight: 600; color: var(--muted);
+    }
+    .bl-field.bl-search { flex: 2 1 220px; }
+    .bl-field select, .bl-field input {
+      width: 100%; min-width: 0; font: inherit; font-size: 14px; font-weight: 400; color: var(--text);
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px;
+    }
+    .bl-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .bl-count { margin-right: auto; font-size: 14px; color: var(--muted); }
+    .bl-seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .bl-seg .bl-btn { border: 0; border-radius: 0; }
+    .bl-seg .bl-btn + .bl-btn { border-left: 1px solid var(--border); }
+    .bl-seg .bl-btn[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+
+    .bl-sort, .bl-group-toggle, .bl-task-toggle {
+      font: inherit; color: inherit; text-align: left; background: none; border: 0; padding: 0; cursor: pointer;
+    }
+    .bl-table { font-size: 14px; }
+    .bl-table th, .bl-table td { padding: 10px 9px; }
+    .bl-table thead th { line-height: 1.3; vertical-align: bottom; }
+    .bl-sort { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; }
+    .bl-sort-ind { font-size: 9px; }
+    .bl-print-label { display: none; }
+    .bl-group th { color: var(--text); font-size: 14px; background: var(--bg); }
+    /* Kept inside the visible part of a horizontally scrolling table on phones. */
+    .bl-group-head {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px;
+      position: sticky; left: 9px; max-width: calc(100vw - 70px);
+    }
+    .bl-group-toggle { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; }
+    .bl-caret::before { content: "▾"; display: inline-block; transition: transform .15s; }
+    [aria-expanded="false"] > .bl-caret::before { transform: rotate(-90deg); }
+    .bl-group-meta { font-size: 13px; font-weight: 500; color: var(--muted); }
+    .bl-group-pts { margin-left: auto; font-variant-numeric: tabular-nums; }
+    tbody.is-collapsed tr:not(.bl-group) { display: none; }
+    .bl-task { cursor: pointer; }
+    .bl-task:hover td, .bl-task.is-open td { background: color-mix(in srgb, var(--wait-soft) 55%, transparent); }
+    .bl-task.is-open td { border-bottom-color: transparent; }
+    .bl-title { min-width: 170px; }
+    .bl-task-toggle { font-weight: 500; }
+    .bl-task-toggle:hover { color: var(--accent); }
+    .bl-num { text-align: right; font-variant-numeric: tabular-nums; }
+    .bl-small { font-size: 13px; color: var(--muted); min-width: 80px; }
+    .bl-none { font-style: italic; }
+    .bl-detail td { background: color-mix(in srgb, var(--wait-soft) 55%, transparent); padding-top: 4px; }
+    .bl-dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px 24px; margin: 0; }
+    .bl-dl .bl-wide { grid-column: 1 / -1; }
+    .bl-dl dt { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+    .bl-dl dd { margin: 2px 0 0; white-space: pre-line; overflow-wrap: anywhere; }
+    .bl-empty { margin: 0; padding: 20px; text-align: center; color: var(--muted); }
+
+    .bl-board { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; align-items: start; }
+    .bl-col { border: 1px solid var(--border); border-radius: 10px; padding: 10px; background: color-mix(in srgb, var(--wait-soft) 45%, transparent); }
+    .bl-col-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px; font-weight: 600; color: var(--muted); }
+    .bl-col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+    .bl-col-empty { font-size: 13px; color: var(--muted); text-align: center; padding: 8px 0; }
+    .bl-kcard { padding: 10px 12px; cursor: pointer; }
+    .bl-kcard:hover { border-color: var(--muted); }
+    .bl-kcard-top { display: flex; justify-content: space-between; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--muted); }
+    .bl-kcard-title { display: block; width: 100%; margin: 4px 0; font-weight: 600; line-height: 1.4; }
+    .bl-kcard-meta { font-size: 12px; color: var(--muted); }
+    .bl-kcard-detail { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 14px; }
+    .bl-kcard-detail .bl-dl { grid-template-columns: 1fr; }
+
+    @media print {
+      :root, :root:not([data-theme="light"]), :root[data-theme="dark"] {
+        --bg: #ffffff;
+        --surface: #ffffff;
+        --text: #1d1f23;
+        --muted: #5d636e;
+        --border: #d9d6d0;
+        --accent: #b3261e;
+        --accent-soft: #fbeceb;
+        --ok: #1f7a4d;
+        --ok-soft: #e6f4ec;
+        --wait: #6b6f78;
+        --wait-soft: #efeeeb;
+        --prog: #1f5fa8;
+        --prog-soft: #e7eff9;
+        --block: #93540a;
+        --block-soft: #fbf0dc;
+      }
+      @page { size: A4; margin: 14mm 12mm; }
+      body { font-size: 10.5pt; line-height: 1.45; }
+      nav, .bl-versions, .bl-toolbar, .bl-notice, .bl-warn, .bl-sort-ind, .bl-caret { display: none !important; }
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      a { color: inherit; text-decoration: none; }
+      section { padding: 24px 0; }
+      #backlog h3 { margin: 18px 0 8px; }
+      .bl-stats { grid-template-columns: repeat(5, 1fr); gap: 6px; }
+      .bl-sort { display: none; }
+      .bl-print-label { display: inline; }
+      .table-wrap { border: 0; border-radius: 0; }
+      .bl-group-head { position: static; max-width: none; }
+      .bl-stat-num { font-size: 16pt; }
+      .card { padding: 8px 10px; break-inside: avoid; }
+      .bl-sprints { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+      .table-wrap { overflow: visible; }
+      .bl-table { font-size: 8.5pt; }
+      .bl-table th, .bl-table td { padding: 4px 6px; }
+      .bl-title, .bl-small { min-width: 0; }
+      .badge { font-size: 7.5pt; padding: 1px 6px; }
+      thead { display: table-header-group; }
+      tr { break-inside: avoid; }
+      .bl-group { break-after: avoid; }
+      .bl-task:hover td { background: none; }
+
+      /* "Print / Save as PDF" button: only the backlog, with its own title block. */
+      .bl-print-backlog main > header,
+      .bl-print-backlog main > section:not(#backlog),
+      .bl-print-backlog footer { display: none; }
+      .bl-print-backlog #backlog { padding-top: 0; }
+      .bl-print-backlog .bl-print-head {
+        display: block; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid var(--text);
+      }
+      .bl-print-project { font-family: "Source Serif 4", Georgia, serif; font-weight: 600; font-size: 15pt; line-height: 1.25; }
+      .bl-print-course, .bl-print-meta { font-size: 9.5pt; color: var(--muted); }
+    }
   </style>
 </head>
 <body>
@@ -143,6 +329,7 @@
       <a class="link" href="#about">About</a>
       <a class="link" href="#team">Team</a>
       <a class="link" href="#deliverables">Deliverables</a>
+      <a class="link" href="#backlog">Backlog</a>
     </div>
   </nav>
 
@@ -197,7 +384,7 @@
                  <a href="reports/D1-Project-Proposal.pdf">PDF</a> -->
             <tr><td class="id">D1</td><td>Project Proposal / Initial Literature Review</td><td class="date">16.10.2026</td><td><a href="reports/D1_Project_Proposal.pdf" target="_blank" rel="noopener">PDF</a></td></tr>
             <tr><td class="id">D2</td><td>Project Specifications / Literature Review</td><td class="date">23.10.2026</td><td><a href="reports/D2_Project_Specifications.pdf" target="_blank" rel="noopener">PDF</a></td></tr>
-            <tr><td class="id">D3</td><td>TODO / Backlog Document v1</td><td class="date">23.10.2026</td><td><span class="badge wait">Upcoming</span></td></tr>
+            <tr><td class="id">D3</td><td>TODO / Backlog Document v1</td><td class="date">23.10.2026</td><td><a href="#backlog?v=v1">Backlog v1</a></td></tr>
             <tr><td class="id">D4</td><td>Project Analysis Report</td><td class="date">20.11.2026</td><td><span class="badge wait">Upcoming</span></td></tr>
             <tr><td class="id">D5</td><td>TODO / Backlog Document v2</td><td class="date">20.11.2026</td><td><span class="badge wait">Upcoming</span></td></tr>
             <tr><td class="id">D6</td><td>High-Level Design Report</td><td class="date">31.12.2026</td><td><span class="badge wait">Upcoming</span></td></tr>
@@ -207,10 +394,65 @@
         </table>
       </div>
     </section>
+
+    <section id="backlog">
+      <div class="bl-print-head">
+        <div class="bl-print-project">Attention-Guided Manipulation-Aware Detection of AI-Generated and Edited Images for Improved Cross-Dataset Generalization</div>
+        <div class="bl-print-course">TODO / Backlog · CMPE 491 Senior Design Project I · TED University · Group 13</div>
+        <div class="bl-print-meta" id="bl-print-meta"></div>
+      </div>
+      <h2>Backlog</h2>
+      <p class="sub">Our TODO / backlog, grouped into sprints. The current backlog is updated through the semester; v1, v2 and v3 are frozen snapshots submitted as D3, D5 and D7.</p>
+      <p class="sub bl-meta" id="bl-meta"></p>
+      <div class="bl-versions" id="bl-versions" role="group" aria-label="Backlog version"></div>
+      <div id="bl-notices"></div>
+
+      <h3>Summary</h3>
+      <div class="bl-stats" id="bl-stats"></div>
+
+      <h3>Sprints</h3>
+      <div class="bl-sprints" id="bl-sprints"></div>
+
+      <h3>Tasks</h3>
+      <div class="bl-toolbar">
+        <div class="bl-chips" role="group" aria-label="Filter by status">
+          <span class="bl-label" aria-hidden="true">Status</span>
+          <button type="button" class="bl-chip" data-status="Not Started" aria-pressed="false">Not Started</button>
+          <button type="button" class="bl-chip" data-status="In Progress" aria-pressed="false">In Progress</button>
+          <button type="button" class="bl-chip" data-status="Complete" aria-pressed="false">Complete</button>
+          <button type="button" class="bl-chip" data-status="Blocked" aria-pressed="false">Blocked</button>
+        </div>
+        <div class="bl-fields">
+          <label class="bl-field">Priority<select id="bl-f-priority"></select></label>
+          <label class="bl-field">Owner<select id="bl-f-owner"></select></label>
+          <label class="bl-field">Sprint<select id="bl-f-sprint"></select></label>
+          <label class="bl-field">Epic<select id="bl-f-epic"></select></label>
+          <label class="bl-field bl-search">Search<input type="search" id="bl-f-q" placeholder="Title, description, ID, FR / NFR…" autocomplete="off"></label>
+        </div>
+        <div class="bl-actions">
+          <span class="bl-count" id="bl-count" aria-live="polite"></span>
+          <button type="button" class="bl-btn" id="bl-clear">Clear filters</button>
+          <div class="bl-seg" role="group" aria-label="View">
+            <button type="button" class="bl-btn" data-view="table" aria-pressed="true">Table</button>
+            <button type="button" class="bl-btn" data-view="board" aria-pressed="false">Board</button>
+          </div>
+          <button type="button" class="bl-btn" id="bl-print">Print / Save as PDF</button>
+          <button type="button" class="bl-btn" id="bl-csv">Export CSV</button>
+        </div>
+      </div>
+      <div id="bl-view"></div>
+      <noscript><p class="sub">The backlog needs JavaScript to be displayed.</p></noscript>
+    </section>
   </main>
 
   <footer>
     <div class="wrap">CMPE 491 Senior Design Project I · TED University · Group 13</div>
   </footer>
+
+  <!-- Backlog data. scripts/freeze_backlog.py adds frozen versions above the end marker. -->
+  <script src="backlog/backlog.js"></script>
+  <script src="backlog/versions/v1.js"></script>
+  <!-- backlog-versions:end -->
+  <script src="backlog/backlog-view.js"></script>
 </body>
 </html>
